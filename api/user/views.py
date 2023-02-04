@@ -64,8 +64,10 @@ class UserOperations():
         updated_name = request.POST['name']
         updated_email = request.POST['email']
         updated_contact = request.POST['contact'] 
-
-        user = User.objects.get(id = id)
+        try:
+            user = User.objects.get(id = id)
+        except: 
+            return JsonResponse({'success':False,'error':True,'msg':'Please Enter a valid user_id'})
         user.name = updated_name 
         user.email = updated_email 
         user.contact = updated_contact 
@@ -74,7 +76,7 @@ class UserOperations():
         return JsonResponse({'success':True,'error':False,'msg':'user details updated successfully', "details": usr_dict}) 
 
     @csrf_exempt
-    def details(self, request, id): 
+    def details(self, id): 
         usr_dict = User.objects.filter(id = id).values().first() 
         new_usr_dict = {k:v for k, v in usr_dict.items() if k in ["name", "email", "contact"]}
         return JsonResponse({'success':True,'error':False,'msg':'user details fetched successfully', "details": new_usr_dict}) 

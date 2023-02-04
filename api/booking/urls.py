@@ -8,5 +8,8 @@ router.register(r'', views.BookingViewSet)
 
 urlpatterns = [
     path('book/',views.BookingOperations().book, name ='book'),
+    path('tickets/',views.RetrievingOperations().viewTicketsByUser, name ='tikcetsByUser'),
+    path('userdetails/',views.RetrievingOperations().viewUserDetailsFromTicket, name ='userInfo'),
     path('', include(router.urls))
 ]
+

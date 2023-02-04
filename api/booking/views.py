@@ -25,7 +25,7 @@ class BookingOperations():
         if not request.method == 'POST':
             return JsonResponse({'error': 'Send a post request with valid paramenter only'})
         
-        name = request.POST.get('name', "Anonmous")
+        name = request.POST['name']
         email = request.POST['email']
         contact = request.POST['contact']
         
@@ -47,12 +47,12 @@ class BookingOperations():
             user_id = user_details["id"]
 
         #grabing ticket info from tickets left or booked 
-        eo = EventOperations(event = event) 
-        tickets_booked = eo.getBookedTickets() 
+        eo = EventOperations() 
+        tickets_booked = eo.getBookedTickets(event = event) 
 
         if tickets_booked==150: 
             return JsonResponse({"error":"Tickets are not available"}) 
-        print(tickets_booked, type(tickets_booked))
+    
         tickets_booked+=1 
 
         #ticket 
@@ -68,9 +68,58 @@ class BookingOperations():
 
         tickets_info = Booking(ticket = ticket, event = event, user_id = user_id)
         tickets_info.save() 
-        ticket_dict = self.booking.objects.filter(user_id = user_id).values().first()
+        ticket_dict = self.booking.objects.filter(user_id = user_id).values().last() 
+        #ticket_dict["ticket"] = ticket
         return JsonResponse({'success':True,'error':False,'msg':'user saved successfully', "details": ticket_dict})  
 
 
 
+
+class RetrievingOperations():
+    def __init__(self):
+        self.userOperations = UserOperations()
+        self.booking = Booking #for fetching details of ticket at the last to throw json response
+
+    @csrf_exempt
+    def viewTicketsByUser(self, request): 
+        if not request.method == 'POST':
+            return JsonResponse({'error': 'Send a post request with a single user_id as parameter'}) 
+
+        user_id = request.POST["user_id"] 
+        
+        user_dict = self.booking.objects.filter(user_id = user_id).values() 
+        
+        #checking valid user_id
+        if not user_dict.exists():
+            return JsonResponse({"error":True, "msg": "send a valid user_id"})
+        
+
+        ticket_list = []
+        for user in user_dict: 
+            ticket_list.append(user['ticket']) 
+
+        return JsonResponse({'success': True, 'tickets': ticket_list})
+
+    @csrf_exempt 
+    def viewUserDetailsFromTicket(self, request):
+        if not request.method == 'POST':
+            return JsonResponse({'error': 'Send a post request with a single ticket as parameter'}) 
+        
+        ticket = request.POST["ticket"] 
+        
+        user_dict = self.booking.objects.filter(ticket = ticket).values() 
+        
+        #checking valid user_id
+        if not user_dict.exists():
+            return JsonResponse({"error":True, "msg": "send a valid ticket"}) 
+        print(user_dict.first())
+        user_id = user_dict.first()['user_id']
+        response_details = self.userOperations.details(user_id)
+
+        return response_details
+
+    
+
+        
+        
 
