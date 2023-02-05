@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'api.event',
     'api.user',
     'api.booking',
+    'resetApi',
 ]
 
 MIDDLEWARE = [
