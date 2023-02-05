@@ -15,17 +15,19 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 class BookingOperations(): 
     #seat is class attribute not instance attribute, faced some bugs when declaring it in __init__ cancel function was unable to update it
-    seats = [[False for _ in range(15)] for _ in range(10)]
+    seats = {}
     def __init__(self): 
         self.userOperations = UserOperations()
         self.booking = Booking #for fetching details of ticket at the last to throw json response
         
         
     def returnTicketName(self, row, col, event): 
-        if self.seats[row][col]: 
+        if event not in self.seats: 
+            self.seats[event] = [[False for _ in range(15)] for _ in range(10)]
+        if self.seats[event][row][col]: 
             return [False, JsonResponse({"msg": "seat is booked, book other"})]
 
-        self.seats[row][col] = True 
+        self.seats[event][row][col] = True 
         
 
         #grabing ticket info from tickets left or booked 
@@ -65,9 +67,9 @@ class BookingOperations():
                 row = int(ticket[i+1])
             if char == "C": 
                 col = int(ticket[i+1])
-        print("setting self.seats false ", self.seats[row][col])
-        self.seats[row][col] = False
-        self.seats[2] = [True]*15
+        
+        self.seats[event][row][col] = False
+        self.seats[event][2] = [True]*15
 
         #delete from Booking model
         self.booking.objects.filter(ticket = ticket).delete() 
@@ -96,7 +98,7 @@ class BookingOperations():
         col = int(request.POST['col'])
         #event 
         event = request.POST['event']
-        print(self.seats[1], self.seats[2], self.seats[row][col])
+    
         if not re.match("^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email):
             return JsonResponse({'error': 'Enter a valid email'})
         
