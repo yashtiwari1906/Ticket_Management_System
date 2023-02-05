@@ -14,10 +14,74 @@ class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializers
 
 class BookingOperations(): 
+    #seat is class attribute not instance attribute, faced some bugs when declaring it in __init__ cancel function was unable to update it
+    seats = [[False for _ in range(15)] for _ in range(10)]
     def __init__(self): 
         self.userOperations = UserOperations()
         self.booking = Booking #for fetching details of ticket at the last to throw json response
         
+        
+    def returnTicketName(self, row, col, event): 
+        if self.seats[row][col]: 
+            return [False, JsonResponse({"msg": "seat is booked, book other"})]
+
+        self.seats[row][col] = True 
+        
+
+        #grabing ticket info from tickets left or booked 
+        eo = EventOperations() 
+        tickets_booked = eo.getBookedTickets(event = event) 
+
+        if tickets_booked==150: 
+            return [False, JsonResponse({"error":"Tickets are not available"})]
+    
+        tickets_booked+=1 
+
+        #ticket 
+        ticket = event + "_" +"R"+str(row)+"C"+str(col)
+
+        #updating info of tickets availability 
+        eo.changeTickets(event, ticket_left = 150 - tickets_booked, ticket_booked = tickets_booked)
+
+        return [True, {"ticket": ticket}]
+
+    @csrf_exempt
+    def cancel(self, request):
+        if not request.method == 'POST':
+            return JsonResponse({'error': 'Send a post request with a single ticket as parameter'}) 
+        
+        ticket = request.POST["ticket"] 
+        user_dict = self.booking.objects.filter(ticket = ticket).values() 
+        
+        #checking valid user_id
+        if not user_dict.exists():
+            return JsonResponse({"error":True, "msg": "send a valid ticket"}) 
+        
+        event = user_dict.first()['event']
+        
+        #free up the seat 
+        for i, char in enumerate(ticket): 
+            if char == "R":
+                row = int(ticket[i+1])
+            if char == "C": 
+                col = int(ticket[i+1])
+        print("setting self.seats false ", self.seats[row][col])
+        self.seats[row][col] = False
+        self.seats[2] = [True]*15
+
+        #delete from Booking model
+        self.booking.objects.filter(ticket = ticket).delete() 
+        
+        #grabing ticket info from tickets left or booked 
+        eo = EventOperations() 
+        tickets_booked = eo.getBookedTickets(event = event) 
+    
+        tickets_booked-=1 
+
+        #updating info of tickets availability 
+        eo.changeTickets(event, ticket_left = 150 - tickets_booked, ticket_booked = tickets_booked)
+
+        return JsonResponse({"success":True, "msg":f"ticket {ticket} deleted successfully.."})
 
 
     @csrf_exempt
@@ -28,10 +92,11 @@ class BookingOperations():
         name = request.POST['name']
         email = request.POST['email']
         contact = request.POST['contact']
-        
+        row = int(request.POST['row'])
+        col = int(request.POST['col'])
         #event 
         event = request.POST['event']
-
+        print(self.seats[1], self.seats[2], self.seats[row][col])
         if not re.match("^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email):
             return JsonResponse({'error': 'Enter a valid email'})
         
@@ -46,20 +111,11 @@ class BookingOperations():
             user_details= response_user_creation["details"]
             user_id = user_details["id"]
 
-        #grabing ticket info from tickets left or booked 
-        eo = EventOperations() 
-        tickets_booked = eo.getBookedTickets(event = event) 
+        response_return_ticket = self.returnTicketName(row, col, event)
+        if not response_return_ticket[0]: #so ticket can't be booked
+            return response_return_ticket[1] 
 
-        if tickets_booked==150: 
-            return JsonResponse({"error":"Tickets are not available"}) 
-    
-        tickets_booked+=1 
-
-        #ticket 
-        ticket = event + "_" +str(tickets_booked) 
-
-        #updating info of tickets availability 
-        eo.changeTickets(event, ticket_left = 150 - tickets_booked, ticket_booked = tickets_booked)
+        ticket = response_return_ticket[1]["ticket"]
 
         response_ticket_save = self.saveTicketDetails(ticket, event, user_id)
         return response_ticket_save
@@ -117,6 +173,35 @@ class RetrievingOperations():
         response_details = self.userOperations.details(user_id)
 
         return response_details
+
+
+class CancelBookedTicket(): 
+    def __init__(self): 
+        self.booking = Booking()
+        
+
+    def cancelAll(self, request):
+        if not request.method == 'POST':
+            return JsonResponse({'error': 'Send a post request with a single ticket as parameter'}) 
+        
+        ticket = request.POST["ticket"] 
+        user_dict = self.booking.objects.filter(ticket = ticket).values() 
+        
+        #checking valid user_id
+        if not user_dict.exists():
+            return JsonResponse({"error":True, "msg": "send a valid ticket"}) 
+        
+        event = user_dict.first()['event']
+        #delete from Booking model
+        self.booking.objects.filter(ticket = ticket).delete() 
+
+        #storing canceled ticket in CancelTickets 
+      
+
+        #there is one prblem if we directly delete ticket what logic we have implemented for ticket naming will fail we have to think of different logic
+
+
+
 
     
 
