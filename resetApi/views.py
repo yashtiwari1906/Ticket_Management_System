@@ -12,7 +12,7 @@ sys.path.append('..')
 from api.user.models import User
 from  api.event.models import Event 
 from  api.booking.models import Booking 
-
+from api.booking.views import BookingOperations
 
 
 class ResetDataBase(): 
@@ -32,7 +32,7 @@ class ResetDataBase():
             event = query["event_name"]
             info = self.event.objects.get(event_name = event)
             info.tickets_booked = 0
-            info.tickets_left= 0
+            info.tickets_left= 150
             info.save()
         return JsonResponse({"success":True, "msg": "All events tickets has been reset"})
 
@@ -51,6 +51,7 @@ class ResetDataBase():
         #superuser_queryset = AuthUser.objects.filter(is_superuser=True)
         #superuser = superuser_queryset.values().first()
         
+        
         if authenticate(username = username, password = password) is not None: 
             User.objects.all().delete()
             self.resetEventModel() 
@@ -60,7 +61,7 @@ class ResetDataBase():
             #saving reset Info
             resetinfo = ResetInfo(username = username)
             resetinfo.save()
-
+            BookingOperations().seats = {}
             return JsonResponse({'success':True,'error':False,'msg':'Data Base has been reset successfully'}) 
         else: 
             return JsonResponse({'success':False,'error':True,'msg':'Please provide right credentials for admin'}) 

@@ -15,26 +15,29 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 class BookingOperations(): 
     #seat is class attribute not instance attribute, faced some bugs when declaring it in __init__ cancel function was unable to update it
-    seats = [[False for _ in range(15)] for _ in range(10)]
+    seats = {}
     def __init__(self): 
         self.userOperations = UserOperations()
         self.booking = Booking #for fetching details of ticket at the last to throw json response
         
         
     def returnTicketName(self, row, col, event): 
-        if self.seats[row][col]: 
-            return [False, JsonResponse({"msg": "seat is booked, book other"})]
+        if event not in self.seats: 
+            self.seats[event] = [[False for _ in range(15)] for _ in range(10)]
+            
+        if self.seats[event][row][col]: 
+            return [False, {"sold_out":False, "msg": "seat is booked, book other"}]
 
-        self.seats[row][col] = True 
+        self.seats[event][row][col] = True 
         
 
         #grabing ticket info from tickets left or booked 
+        
         eo = EventOperations() 
         tickets_booked = eo.getBookedTickets(event = event) 
 
         if tickets_booked==150: 
-            return [False, JsonResponse({"error":"Tickets are not available"})]
-    
+            return [False, {"sold_out":True, "error":"Tickets are not available"}]
         tickets_booked+=1 
 
         #ticket 
@@ -43,7 +46,7 @@ class BookingOperations():
         #updating info of tickets availability 
         eo.changeTickets(event, ticket_left = 150 - tickets_booked, ticket_booked = tickets_booked)
 
-        return [True, {"ticket": ticket}]
+        return [True, {"sold_out":False, "ticket": ticket}]
 
     @csrf_exempt
     def cancel(self, request):
@@ -65,9 +68,9 @@ class BookingOperations():
                 row = int(ticket[i+1])
             if char == "C": 
                 col = int(ticket[i+1])
-        print("setting self.seats false ", self.seats[row][col])
-        self.seats[row][col] = False
-        self.seats[2] = [True]*15
+        
+        self.seats[event][row][col] = False
+        
 
         #delete from Booking model
         self.booking.objects.filter(ticket = ticket).delete() 
@@ -88,15 +91,17 @@ class BookingOperations():
     def book(self, request): 
         if not request.method == 'POST':
             return JsonResponse({'error': 'Send a post request with valid paramenter only'})
-        
+    
         name = request.POST['name']
         email = request.POST['email']
         contact = request.POST['contact']
-        row = int(request.POST['row'])
-        col = int(request.POST['col'])
+        #row = int(request.POST['row'])
+        #col = int(request.POST['col'])
+        event_dict = request.POST["event_dict"]  # {"event":[(), (), ()], .....}
+        event_dict = json.loads(event_dict)
         #event 
-        event = request.POST['event']
-        print(self.seats[1], self.seats[2], self.seats[row][col])
+        #event = request.POST['event']
+        
         if not re.match("^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email):
             return JsonResponse({'error': 'Enter a valid email'})
         
@@ -111,14 +116,78 @@ class BookingOperations():
             user_details= response_user_creation["details"]
             user_id = user_details["id"]
 
-        response_return_ticket = self.returnTicketName(row, col, event)
-        if not response_return_ticket[0]: #so ticket can't be booked
-            return response_return_ticket[1] 
+        #checking wether ticket is available 
+        
 
-        ticket = response_return_ticket[1]["ticket"]
+        #pass to processEvents to book ticket
+        # response_return_ticket = self.returnTicketName(row, col, event)
+        # if not response_return_ticket[0]: #so ticket can't be booked
+        #     return response_return_ticket[1] 
 
-        response_ticket_save = self.saveTicketDetails(ticket, event, user_id)
-        return response_ticket_save
+        # ticket = response_return_ticket[1]["ticket"]
+
+        # response_ticket_save = self.saveTicketDetails(ticket, event, user_id)
+        # return response_ticket_save
+
+        response_for_process = self.processEvents(event_dict, user_id)
+        return response_for_process
+    
+    def processEvents(self, event_dict, user_id): 
+        # {"event":[(), (), ()], .....}
+        #o/p - > {"event_name":"", "tickets":[], "seatsNotBooked":[], "msg":"reason for not booking of seats"}
+        #not_available_seats, booked_tickets = [], []
+        result_for_processEvents = {}
+        for event_name, seat_list_str in event_dict.items(): 
+            
+            seat_list = [(int(seat[1]), int(seat[4])) for seat in seat_list_str.split(":")]
+            num_tickets = len(seat_list)
+            not_available_seats, booked_tickets = [], []
+            tickets, seatsNotAvailable, msg = [], [], ""
+            for i, seat in enumerate(seat_list): 
+                #event_name, seat(r, c)
+                row, col = seat 
+                response_return_ticket = self.returnTicketName(row, col, event_name)
+                if not response_return_ticket[0]: #so ticket can't be booked
+                    print(response_return_ticket)
+                    if response_return_ticket[1]["sold_out"]:
+                        not_available_seats.extend(seat_list[i:])
+                        seatsNotAvailable = not_available_seats.copy() 
+                        tickets = booked_tickets.copy()
+                        msg = "Tickets has been completely sold out"
+                        break
+                    else:
+                        not_available_seats.append(tuple(seat))
+                       
+                else:
+                    ticket = response_return_ticket[1]["ticket"]
+                    booked_tickets.append(ticket)
+                    response_ticket_save = self.saveTicketDetails(ticket, event_name, user_id)
+            print("*"*20)
+            if msg == "":
+                tickets = booked_tickets.copy() 
+                seatsNotAvailable = tuple(not_available_seats.copy())
+                if len(seatsNotAvailable) == 0: 
+                    msg = "All seats has been booked successfully"
+                else:
+                    msg = "seats were already booked"
+
+                response_process_event = {
+                    "event_name":event_name,
+                    "booked_tickets": tickets,
+                    "seats_not_booked": seatsNotAvailable,
+                    "msg":msg  
+                }
+
+            else: 
+                response_process_event = {
+                    "event_name":event_name,
+                    "booked_tickets": tickets,
+                    "seats_not_booked": seatsNotAvailable,
+                    "msg":msg  
+                }
+            result_for_processEvents[event_name] = response_process_event
+        return JsonResponse(result_for_processEvents)
+
 
     def saveTicketDetails(self, ticket, event, user_id):
 
@@ -126,7 +195,7 @@ class BookingOperations():
         tickets_info.save() 
         ticket_dict = self.booking.objects.filter(user_id = user_id).values().last() 
         #ticket_dict["ticket"] = ticket
-        return JsonResponse({'success':True,'error':False,'msg':'user saved successfully', "details": ticket_dict})  
+        return {"details": ticket_dict}  
 
 
 
@@ -194,12 +263,6 @@ class CancelBookedTicket():
         event = user_dict.first()['event']
         #delete from Booking model
         self.booking.objects.filter(ticket = ticket).delete() 
-
-        #storing canceled ticket in CancelTickets 
-      
-
-        #there is one prblem if we directly delete ticket what logic we have implemented for ticket naming will fail we have to think of different logic
-
 
 
 
