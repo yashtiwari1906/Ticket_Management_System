@@ -73,13 +73,11 @@ class UserOperations():
         query = User.objects.filter(email = email).filter(name = name).filter(contact = contact)
         if query.exists(): 
                 user_id = query.values().first()["id"]
-                print(user_id)
+        
         else:
             return JsonResponse({"success":False, 'msg': 'send valid user details, this user is not registered'})
-        try:
-            user = User.objects.get(id = user_id)
-        except: 
-            return JsonResponse({'success':False,'error':True,'msg':'Please Enter a valid user_id'})
+        
+        user = User.objects.get(id = user_id)
         user.name = updated_name 
         user.email = updated_email 
         user.contact = updated_contact 
@@ -102,9 +100,6 @@ class UserOperations():
 
         username = request.POST['username']
         password = request.POST['password']
-
-        #superuser_queryset = AuthUser.objects.filter(is_superuser=True)
-        #superuser = superuser_queryset.values().first()
         
         if authenticate(username = username, password = password) is not None: 
             User.objects.all().delete()

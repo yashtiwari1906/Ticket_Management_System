@@ -49,9 +49,6 @@ class ResetDataBase():
 
         username = request.POST['username']
         password = request.POST['password']
-
-        #superuser_queryset = AuthUser.objects.filter(is_superuser=True)
-        #superuser = superuser_queryset.values().first()
         
         if authenticate(username = username, password = password) is not None: 
             User.objects.all().delete()
