@@ -129,7 +129,6 @@ class BookingOperations():
     def processEvents(self, event_dict, user_id): 
         # {"event":[(), (), ()], .....}
         #o/p - > {"event_name":"", "tickets":[], "seatsNotBooked":[], "msg":"reason for not booking of seats"}
-        #not_available_seats, booked_tickets = [], []
         result_for_processEvents = {}
         for event_name, seat_list_str in event_dict.items(): 
             if event_name not in self.events: 
@@ -140,12 +139,11 @@ class BookingOperations():
             num_tickets = len(seat_list)
             not_available_seats, booked_tickets = [], []
             tickets, seatsNotAvailable, msg = [], [], ""
-            for i, seat in enumerate(seat_list): 
-                #event_name, seat(r, c)
+            for i, seat in enumerate(seat_list):
                 row, col = seat 
                 response_return_ticket = self.returnTicketName(row, col, event_name)
                 if not response_return_ticket[0]: #so ticket can't be booked
-                    print(response_return_ticket)
+    
                     if response_return_ticket[1]["sold_out"]:
                         not_available_seats.extend(seat_list[i:])
                         seatsNotAvailable = not_available_seats.copy() 
@@ -159,7 +157,7 @@ class BookingOperations():
                     ticket = response_return_ticket[1]["ticket"]
                     booked_tickets.append(ticket)
                     response_ticket_save = self.saveTicketDetails(ticket, event_name, user_id)
-            print("*"*20)
+            
             if msg == "":
                 tickets = booked_tickets.copy() 
                 seatsNotAvailable = tuple(not_available_seats.copy())
