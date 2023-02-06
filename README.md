@@ -31,7 +31,9 @@
 ### Some Important Info 
     * The main branch has all the must have points of the doc provided. 
     * branch name feature/multi-event-booking-onego is the implementation of the good to have points of the doc.
-
+### Pro-Tip 
+    * hit Admin reset API from postman to reset the server and start you testing from scratch.
+    
 ### Future Work 
     * starting booking time is more because system is generating all the corresponding tickets, It can be improved by generating tickets at the time of event registry.
     * User login/logout functionality based on JWT can be introduced so that updation of details don't require old details.
