@@ -5,8 +5,8 @@
     
     - Fill Username and password  
     - If don't wan't to create a superuser use 
-      * username = yash 
-      * password = 12345
+      * username = arya
+      * password = Arya@123
     
 ## Installation 
 
