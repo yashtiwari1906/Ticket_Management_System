@@ -7,6 +7,7 @@ import re
 import json
 from ..user.views import UserOperations
 from  ..event.views import EventOperations
+from ..event.models import Event
 # Create your views here.
  
 class BookingViewSet(viewsets.ModelViewSet):
@@ -19,6 +20,8 @@ class BookingOperations():
     def __init__(self): 
         self.userOperations = UserOperations()
         self.booking = Booking #for fetching details of ticket at the last to throw json response
+    
+        self.events = Event.objects.values_list("event_name", flat = True).order_by("event_name")
         
         
     def returnTicketName(self, row, col, event): 
@@ -97,6 +100,9 @@ class BookingOperations():
         col = int(request.POST['col'])
         #event 
         event = request.POST['event']
+        print(self.events)
+        if event not in self.events: 
+            return JsonResponse({"success":False, "msg": "Enter a valid event name"})
     
         if not re.match("^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email):
             return JsonResponse({'error': 'Enter a valid email'})
