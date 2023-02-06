@@ -11,11 +11,9 @@ import json
  
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all().order_by('event_id')
-    
     serializer_class = EventSerializers
 
 
-#This is for if just we have to show numbers not original tickets
 class EventOperations():  
     def __init__(self):
         pass
@@ -29,13 +27,13 @@ class EventOperations():
         return int(event_dict["tickets_booked"])
 
     def changeTickets(self, event, ticket_left, ticket_booked): 
-        self.info = Event.objects.get(event_name = event)
-        self.info.tickets_left = ticket_left 
-        self.info.save()
+        info = Event.objects.get(event_name = event)
+        info.tickets_left = ticket_left 
+        info.save()
 
-        self.info = Event.objects.get(event_name = event)
-        self.info.tickets_booked = ticket_booked
-        self.info.save()
+        info = Event.objects.get(event_name = event)
+        info.tickets_booked = ticket_booked
+        info.save()
 
     
     #reset tickets 

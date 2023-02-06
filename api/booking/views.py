@@ -15,13 +15,13 @@ class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializers
 
 class BookingOperations(): 
-    #seat is class attribute not instance attribute, faced some bugs when declaring it in __init__ cancel function was unable to update it
     def __init__(self): 
         self.userOperations = UserOperations()
-        self.booking = Booking #for fetching details of ticket at the last to throw json response
+        self.eventoperations = EventOperations()
     
-        self.events = Event.objects.values_list("event_name", flat = True).order_by("event_name")
-        self.seats = Seats
+        self.booking = Booking #for fetching details of ticket at the last to throw json response
+        self.events = Event.objects.values_list("event_name", flat = True).order_by("event_name") #comparing user entered a valid event or not
+        self.seats = Seats #for handling seats booking and cancellation
         
         
     def returnTicketName(self, row, col, event): 
@@ -34,7 +34,7 @@ class BookingOperations():
                     seat_instance.save() 
 
         #grabing ticket info from tickets left or booked 
-        eo = EventOperations() 
+        eo = self.eventoperations 
         tickets_booked = eo.getBookedTickets(event = event) 
 
         if tickets_booked==150: 
@@ -46,11 +46,10 @@ class BookingOperations():
 
         #booking seat for (row, col)
         self.seats.objects.filter(event = event).filter(row = row).filter(col = col).update(booked = True)
-        
-        
+
         tickets_booked+=1 
 
-        #ticket 
+        #generating ticket 
         ticket = event + "_" +"R"+str(row)+"C"+str(col)
 
         #updating info of tickets availability 
@@ -78,7 +77,7 @@ class BookingOperations():
                 row = int(ticket[i+1])
             if char == "C": 
                 col = int(ticket[i+1])
-        
+        #making seat available at (row, col)
         self.seats.objects.filter(event = event).filter(row = row).filter(col = col).update(booked = False)
         
     
@@ -86,7 +85,7 @@ class BookingOperations():
         self.booking.objects.filter(ticket = ticket).delete() 
         
         #grabing ticket info from tickets left or booked 
-        eo = EventOperations() 
+        eo = self.eventoperations
         tickets_booked = eo.getBookedTickets(event = event) 
     
         tickets_booked-=1 
@@ -141,10 +140,8 @@ class BookingOperations():
         tickets_info = Booking(ticket = ticket, event = event, user_id = user_id)
         tickets_info.save() 
         ticket_dict = self.booking.objects.filter(user_id = user_id).values().last() 
-        #ticket_dict["ticket"] = ticket
+        
         return JsonResponse({'success':True,'error':False,'msg':'user saved successfully', "details": ticket_dict})  
-
-
 
 
 class RetrievingOperations():
