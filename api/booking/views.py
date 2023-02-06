@@ -23,12 +23,7 @@ class BookingOperations():
         
     def returnTicketName(self, row, col, event): 
         if event not in self.seats: 
-            self.seats[event] = [[False for _ in range(15)] for _ in range(10)]
-        if self.seats[event][row][col]: 
-            return [False, JsonResponse({"msg": "seat is booked, book other"})]
-
-        self.seats[event][row][col] = True 
-        
+            self.seats[event] = [[False for _ in range(15+1)] for _ in range(10+1)]
 
         #grabing ticket info from tickets left or booked 
         eo = EventOperations() 
@@ -36,7 +31,11 @@ class BookingOperations():
 
         if tickets_booked==150: 
             return [False, JsonResponse({"error":"Tickets are not available"})]
-    
+
+        if self.seats[event][row][col]: 
+            return [False, JsonResponse({"msg": "seat is booked, book other"})]
+
+        self.seats[event][row][col] = True 
         tickets_booked+=1 
 
         #ticket 
