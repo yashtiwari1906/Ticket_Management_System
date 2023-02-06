@@ -1,6 +1,6 @@
 from rest_framework import viewsets 
 from .serializers import BookingSerializers
-from .models import Booking
+from .models import Booking, Seats
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import re
@@ -16,17 +16,22 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 class BookingOperations(): 
     #seat is class attribute not instance attribute, faced some bugs when declaring it in __init__ cancel function was unable to update it
-    seats = {}
     def __init__(self): 
         self.userOperations = UserOperations()
         self.booking = Booking #for fetching details of ticket at the last to throw json response
     
         self.events = Event.objects.values_list("event_name", flat = True).order_by("event_name")
+        self.seats = Seats
         
         
     def returnTicketName(self, row, col, event): 
-        if event not in self.seats: 
-            self.seats[event] = [[False for _ in range(15+1)] for _ in range(10+1)]
+        query = self.seats.objects.filter(event = event).values()
+        if not query.exists(): 
+            #filling model Seats with default values 
+            for i in range(1, 10+1): 
+                for j in range(1, 15+1): 
+                    seat_instance = self.seats(event = event, row = i, col = j, booked = False)
+                    seat_instance.save() 
 
         #grabing ticket info from tickets left or booked 
         eo = EventOperations() 
@@ -35,10 +40,14 @@ class BookingOperations():
         if tickets_booked==150: 
             return [False, JsonResponse({"error":"Tickets are not available"})]
 
-        if self.seats[event][row][col]: 
+        query = self.seats.objects.filter(event = event).filter(row = row).filter(col = col).filter(booked = True).values()
+        if query.exists(): 
             return [False, JsonResponse({"msg": "seat is booked, book other"})]
 
-        self.seats[event][row][col] = True 
+        #booking seat for (row, col)
+        self.seats.objects.filter(event = event).filter(row = row).filter(col = col).update(booked = True)
+        
+        
         tickets_booked+=1 
 
         #ticket 
@@ -70,9 +79,9 @@ class BookingOperations():
             if char == "C": 
                 col = int(ticket[i+1])
         
-        self.seats[event][row][col] = False
-        self.seats[event][2] = [True]*15
-
+        self.seats.objects.filter(event = event).filter(row = row).filter(col = col).update(booked = False)
+        
+    
         #delete from Booking model
         self.booking.objects.filter(ticket = ticket).delete() 
         
@@ -100,7 +109,7 @@ class BookingOperations():
         col = int(request.POST['col'])
         #event 
         event = request.POST['event']
-    
+
         if event not in self.events: 
             return JsonResponse({"success":False, "msg": "Enter a valid event name"})
     
@@ -181,37 +190,4 @@ class RetrievingOperations():
 
         return response_details
 
-
-class CancelBookedTicket(): 
-    def __init__(self): 
-        self.booking = Booking()
-        
-
-    def cancelAll(self, request):
-        if not request.method == 'POST':
-            return JsonResponse({'error': 'Send a post request with a single ticket as parameter'}) 
-        
-        ticket = request.POST["ticket"] 
-        user_dict = self.booking.objects.filter(ticket = ticket).values() 
-        
-        #checking valid user_id
-        if not user_dict.exists():
-            return JsonResponse({"error":True, "msg": "send a valid ticket"}) 
-        
-        event = user_dict.first()['event']
-        #delete from Booking model
-        self.booking.objects.filter(ticket = ticket).delete() 
-
-        #storing canceled ticket in CancelTickets 
-      
-
-        #there is one prblem if we directly delete ticket what logic we have implemented for ticket naming will fail we have to think of different logic
-
-
-
-
-    
-
-        
-        
 

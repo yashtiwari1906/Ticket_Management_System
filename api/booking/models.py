@@ -13,3 +13,11 @@ class Booking(models.Model):
         return self.ticket
 
 
+class Seats(models.Model):
+    event = models.CharField(max_length = 50) 
+    row = models.IntegerField()
+    col = models.IntegerField() 
+    booked = models.BooleanField() 
+
+    def __str__(self): 
+        return self.event + "_" + "(" + str(self.row) +"," + str(self.col) + ")"

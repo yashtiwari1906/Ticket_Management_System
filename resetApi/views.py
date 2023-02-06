@@ -11,7 +11,7 @@ sys.path.append('..')
 # importing
 from api.user.models import User
 from  api.event.models import Event 
-from  api.booking.models import Booking 
+from  api.booking.models import Booking, Seats
 
 
 
@@ -20,6 +20,7 @@ class ResetDataBase():
         self.user = User 
         self.event = Event  
         self.booking = Booking
+        self.seats = Seats
 
     def resetUserModel(self): 
         self.user.objects.all().delete() 
@@ -38,6 +39,7 @@ class ResetDataBase():
 
     def resetBookingModel(self): 
         self.booking.objects.all().delete() 
+        self.seats.objects.all().delete() 
         return JsonResponse({"success":True, "msg": "All bookings has been cancelled"})
 
     @csrf_exempt
