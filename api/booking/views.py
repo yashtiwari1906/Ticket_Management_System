@@ -154,13 +154,21 @@ class RetrievingOperations():
         if not request.method == 'POST':
             return JsonResponse({'error': 'Send a post request with a single user_id as parameter'}) 
 
-        user_id = request.POST["user_id"] 
-        
+        name = request.POST['name']
+        email = request.POST['email']
+        contact = request.POST['contact']
+        response = self.userOperations.checkUserExists(request) 
+        response = json.loads(response.content.decode('utf-8'))
+       
+        if response["exists"]:
+            user_id = response["id"]
+        else: 
+            return JsonResponse({"error":True, "msg": "send a valid user details."})
         user_dict = self.booking.objects.filter(user_id = user_id).values() 
         
         #checking valid user_id
         if not user_dict.exists():
-            return JsonResponse({"error":True, "msg": "send a valid user_id or there has been no tickets booked by this user"})
+            return JsonResponse({"error":True, "msg": "there has been no tickets booked by this user"})
         
 
         ticket_list = []
