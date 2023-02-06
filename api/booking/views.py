@@ -181,7 +181,7 @@ class RetrievingOperations():
         #checking valid user_id
         if not user_dict.exists():
             return JsonResponse({"error":True, "msg": "send a valid ticket"}) 
-        print(user_dict.first())
+    
         user_id = user_dict.first()['user_id']
         response_details = self.userOperations.details(user_id)
 
