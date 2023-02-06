@@ -57,22 +57,34 @@ class UserOperations():
         return JsonResponse({'success':True,'error':False,'msg':'user saved successfully', "details": usr_dict}) 
 
     @csrf_exempt
-    def update(self, request, id):
+    def update(self, request):
         if not request.method == 'POST':
             return JsonResponse({'error': 'Send a post request with valid paramenter only'}) 
 
-        updated_name = request.POST['name']
-        updated_email = request.POST['email']
-        updated_contact = request.POST['contact'] 
+        #original creds 
+        name = request.POST['name']
+        email = request.POST['email']
+        contact = request.POST['contact'] 
+        #prospective updation
+        updated_name = request.POST['updated_name']
+        updated_email = request.POST['updated_email']
+        updated_contact = request.POST['updated_contact'] 
+
+        query = User.objects.filter(email = email).filter(name = name).filter(contact = contact)
+        if query.exists(): 
+                user_id = query.values().first()["id"]
+                print(user_id)
+        else:
+            return JsonResponse({"success":False, 'msg': 'send valid user details, this user is not registered'})
         try:
-            user = User.objects.get(id = id)
+            user = User.objects.get(id = user_id)
         except: 
             return JsonResponse({'success':False,'error':True,'msg':'Please Enter a valid user_id'})
         user.name = updated_name 
         user.email = updated_email 
         user.contact = updated_contact 
         user.save()
-        usr_dict = User.objects.filter(id = id).values().first()
+        usr_dict = User.objects.filter(id = user_id).values().first()
         return JsonResponse({'success':True,'error':False,'msg':'user details updated successfully', "details": usr_dict}) 
 
     @csrf_exempt
