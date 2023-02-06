@@ -100,7 +100,7 @@ class BookingOperations():
         col = int(request.POST['col'])
         #event 
         event = request.POST['event']
-        print(self.events)
+    
         if event not in self.events: 
             return JsonResponse({"success":False, "msg": "Enter a valid event name"})
     
@@ -154,7 +154,7 @@ class RetrievingOperations():
         
         #checking valid user_id
         if not user_dict.exists():
-            return JsonResponse({"error":True, "msg": "send a valid user_id"})
+            return JsonResponse({"error":True, "msg": "send a valid user_id or there has been no tickets booked by this user"})
         
 
         ticket_list = []
