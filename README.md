@@ -13,12 +13,12 @@
  ### Install all requirements from requirements.txt 
       `pip install -r requirements.txt`
       
- ### Make all Migrations & Migrate (Good Practise) 
+ ### Make all Migrations & Migrate (Good Practice) 
     `python manage.py makemigrations`
     `python manage.py migrate`
     
 ### Run the django app 
-    `python manage.py runserver` 
+    ` python manage.py runserver ` 
     
 ### prequisites 
     * Once the server is live login to admin by hiting the url http://127.0.0.1:8000/admin/ and add the Events of your choice say. comedy_show, movie, etc. and then you can go ahead with testing it out for those events.
