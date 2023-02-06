@@ -20,6 +20,10 @@
 ### Run the django app 
     ` python manage.py runserver ` 
     
+### URLS fr the project
+    * Majorly we'll need admin url to access admin panel from web which is http://127.0.0.1:8000/admin/ and rest all urls are on postman link to workspace is given below.
+    * https://app.getpostman.com/join-team?invite_code=381ad60225f2f9b40ee9349f40e99442&target_code=0a3d1cb55f54a0e4e3b2bae9e022319e
+    
 ### prequisites 
     * Once the server is live login to admin by hiting the url http://127.0.0.1:8000/admin/ and add the Events of your choice say. comedy_show, movie, etc. and then you can go ahead with testing it out for those events.
     * PS. I have only considered 150 seats since it was written in doc.
