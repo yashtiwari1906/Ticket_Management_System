@@ -32,7 +32,7 @@ class ResetDataBase():
             event = query["event_name"]
             info = self.event.objects.get(event_name = event)
             info.tickets_booked = 0
-            info.tickets_left= 0
+            info.tickets_left= 150
             info.save()
         return JsonResponse({"success":True, "msg": "All events tickets has been reset"})
 

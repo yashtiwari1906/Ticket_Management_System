@@ -44,7 +44,7 @@ class EventOperations():
 
         for query in queryset: 
             query["tickets_booked"] = 0 
-            query["tickets_left"] = 0 
+            query["tickets_left"] = 150
 
             query.save()
         print("reset complete!!")

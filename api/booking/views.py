@@ -7,6 +7,7 @@ import re
 import json
 from ..user.views import UserOperations
 from  ..event.views import EventOperations
+from ..event.models import Event
 # Create your views here.
  
 class BookingViewSet(viewsets.ModelViewSet):
@@ -19,16 +20,13 @@ class BookingOperations():
     def __init__(self): 
         self.userOperations = UserOperations()
         self.booking = Booking #for fetching details of ticket at the last to throw json response
+    
+        self.events = Event.objects.values_list("event_name", flat = True).order_by("event_name")
         
         
     def returnTicketName(self, row, col, event): 
         if event not in self.seats: 
-            self.seats[event] = [[False for _ in range(15)] for _ in range(10)]
-        if self.seats[event][row][col]: 
-            return [False, JsonResponse({"msg": "seat is booked, book other"})]
-
-        self.seats[event][row][col] = True 
-        
+            self.seats[event] = [[False for _ in range(15+1)] for _ in range(10+1)]
 
         #grabing ticket info from tickets left or booked 
         eo = EventOperations() 
@@ -36,7 +34,11 @@ class BookingOperations():
 
         if tickets_booked==150: 
             return [False, JsonResponse({"error":"Tickets are not available"})]
-    
+
+        if self.seats[event][row][col]: 
+            return [False, JsonResponse({"msg": "seat is booked, book other"})]
+
+        self.seats[event][row][col] = True 
         tickets_booked+=1 
 
         #ticket 
@@ -99,6 +101,9 @@ class BookingOperations():
         #event 
         event = request.POST['event']
     
+        if event not in self.events: 
+            return JsonResponse({"success":False, "msg": "Enter a valid event name"})
+    
         if not re.match("^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email):
             return JsonResponse({'error': 'Enter a valid email'})
         
@@ -149,7 +154,7 @@ class RetrievingOperations():
         
         #checking valid user_id
         if not user_dict.exists():
-            return JsonResponse({"error":True, "msg": "send a valid user_id"})
+            return JsonResponse({"error":True, "msg": "send a valid user_id or there has been no tickets booked by this user"})
         
 
         ticket_list = []
