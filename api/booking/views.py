@@ -38,11 +38,11 @@ class BookingOperations():
         tickets_booked = eo.getBookedTickets(event = event) 
 
         if tickets_booked==150: 
-            return [False, JsonResponse({"error":"Tickets are not available"})]
+            return [False, {"sold_out":True, "error":"Tickets are not available"}]
 
         query = self.seats.objects.filter(event = event).filter(row = row).filter(col = col).filter(booked = True).values()
         if query.exists(): 
-            return [False, JsonResponse({"msg": "seat is booked, book other"})]
+            return [False, {"sold_out":False, "msg": "seat is booked, book other"}]
 
         #booking seat for (row, col)
         self.seats.objects.filter(event = event).filter(row = row).filter(col = col).update(booked = True)
@@ -55,7 +55,7 @@ class BookingOperations():
         #updating info of tickets availability 
         eo.changeTickets(event, ticket_left = 150 - tickets_booked, ticket_booked = tickets_booked)
 
-        return [True, {"ticket": ticket}]
+        return [True, {"sold_out":False, "ticket": ticket}]
 
     @csrf_exempt
     def cancel(self, request):
@@ -104,13 +104,10 @@ class BookingOperations():
         name = request.POST['name']
         email = request.POST['email']
         contact = request.POST['contact']
-        row = int(request.POST['row'])
-        col = int(request.POST['col'])
         #event 
-        event = request.POST['event']
+        event_dict = request.POST["event_dict"]  # {"event":[(), (), ()], .....}
+        event_dict = json.loads(event_dict)
 
-        if event not in self.events: 
-            return JsonResponse({"success":False, "msg": "Enter a valid event name"})
     
         if not re.match("^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$", email):
             return JsonResponse({'error': 'Enter a valid email'})
@@ -126,14 +123,67 @@ class BookingOperations():
             user_details= response_user_creation["details"]
             user_id = user_details["id"]
 
-        response_return_ticket = self.returnTicketName(row, col, event)
-        if not response_return_ticket[0]: #so ticket can't be booked
-            return response_return_ticket[1] 
+        response_for_process = self.processEvents(event_dict, user_id)
+        return response_for_process
 
-        ticket = response_return_ticket[1]["ticket"]
+    def processEvents(self, event_dict, user_id): 
+        # {"event":[(), (), ()], .....}
+        #o/p - > {"event_name":"", "tickets":[], "seatsNotBooked":[], "msg":"reason for not booking of seats"}
+        #not_available_seats, booked_tickets = [], []
+        result_for_processEvents = {}
+        for event_name, seat_list_str in event_dict.items(): 
+            if event_name not in self.events: 
+                result_for_processEvents[event_name] = {"msg": "Enter a valid event name"}
+                continue 
 
-        response_ticket_save = self.saveTicketDetails(ticket, event, user_id)
-        return response_ticket_save
+            seat_list = [(int(seat[1]), int(seat[4])) for seat in seat_list_str.split(":")]
+            num_tickets = len(seat_list)
+            not_available_seats, booked_tickets = [], []
+            tickets, seatsNotAvailable, msg = [], [], ""
+            for i, seat in enumerate(seat_list): 
+                #event_name, seat(r, c)
+                row, col = seat 
+                response_return_ticket = self.returnTicketName(row, col, event_name)
+                if not response_return_ticket[0]: #so ticket can't be booked
+                    print(response_return_ticket)
+                    if response_return_ticket[1]["sold_out"]:
+                        not_available_seats.extend(seat_list[i:])
+                        seatsNotAvailable = not_available_seats.copy() 
+                        tickets = booked_tickets.copy()
+                        msg = "Tickets has been completely sold out"
+                        break
+                    else:
+                        not_available_seats.append(tuple(seat))
+                       
+                else:
+                    ticket = response_return_ticket[1]["ticket"]
+                    booked_tickets.append(ticket)
+                    response_ticket_save = self.saveTicketDetails(ticket, event_name, user_id)
+            print("*"*20)
+            if msg == "":
+                tickets = booked_tickets.copy() 
+                seatsNotAvailable = tuple(not_available_seats.copy())
+                if len(seatsNotAvailable) == 0: 
+                    msg = "All seats has been booked successfully"
+                else:
+                    msg = "seats were already booked"
+
+                response_process_event = {
+                    "event_name":event_name,
+                    "booked_tickets": tickets,
+                    "seats_not_booked": seatsNotAvailable,
+                    "msg":msg  
+                }
+
+            else: 
+                response_process_event = {
+                    "event_name":event_name,
+                    "booked_tickets": tickets,
+                    "seats_not_booked": seatsNotAvailable,
+                    "msg":msg  
+                }
+            result_for_processEvents[event_name] = response_process_event
+        return JsonResponse(result_for_processEvents)
 
     def saveTicketDetails(self, ticket, event, user_id):
 
