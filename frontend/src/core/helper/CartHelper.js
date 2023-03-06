@@ -16,7 +16,7 @@ export const addItemToCart =(item, next) =>{
 export const addTicket =(row, col) =>{
     let Row = 0; 
     let Col = 0;
-    console.log("event name added", row, col)
+   
     if(typeof window !=undefined){
         if(localStorage.getItem("Row")){
           Row=JSON.parse(localStorage.getItem("Row"))

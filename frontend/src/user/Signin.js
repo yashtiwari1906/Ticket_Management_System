@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { redirect, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import Base from "../core/Base";
 import { signup } from './helper';
@@ -57,7 +57,6 @@ const Signin = () => {
     }
     
     const onSubmit=(event_case)=>{
-        console.log("why why")
         var event = ""; 
         var col = 0;
         var row = 0;
@@ -68,7 +67,7 @@ const Signin = () => {
         setValues({...values, error: false})
         signup({name,email,contact, event, row, col})    // replace 1 and 5 with (row, col)
         .then((data)=> {
-            console.log("DATA", "-------", data);
+            
             if(data.details.event === event){
                 setValues({
                     ...values,

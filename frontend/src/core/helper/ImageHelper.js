@@ -1,13 +1,11 @@
 import React from "react";
 
 const ImageHelper = ({ event }) => {
-  console.log("this function has been called")
+  
   const imageurl = event
     ? event.image
     : ""
-    console.log("----------------------")
-    console.log(event.image)
-    console.log("----------------------")
+   
 
   return (
     <div className="rounded border border-success p-2">

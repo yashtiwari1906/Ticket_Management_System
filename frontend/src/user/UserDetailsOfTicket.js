@@ -1,6 +1,4 @@
-import { getDefaultNormalizer } from '@testing-library/react';
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom';
 import Base from "../core/Base";
 import { userDetailsFetch } from './helper/index';
 
@@ -8,7 +6,7 @@ import { userDetailsFetch } from './helper/index';
 
 
 const UserDetailsOfTicket = () => {
-    const navigate = useNavigate();
+    
     const [details, setDetails] = useState({
         name: "", 
         email: "",
@@ -42,17 +40,14 @@ const UserDetailsOfTicket = () => {
             )
         }
     }
-
-    
     
     const onSubmit=(event_case)=>{
         
         event_case.preventDefault();
         setValues({...values, error: false})
-        console.log("ticket is ", ticket)
         userDetailsFetch({ticket})    // replace 1 and 5 with (row, col)
         .then((data)=> {
-            console.log("DATA", "-------", data);
+            
             if(data.success){
                 setDetails({
                     name: data.details.name, 
@@ -141,7 +136,6 @@ const UserDetailsOfTicket = () => {
     {errorMessage()}
     {signUpForm()}
     {displayDetails()}
-    
    
     </Base>
   )
