@@ -4,7 +4,7 @@
   * This system is consist of a backend and frontend API.
   * There are some Images realted to pages of the frontend system in the Images folder.
    
-![alt text](https://github.com/yashtiwari1906/Ticket_Management_System/blob/main/Images/Home%20Page.png)
+![alt text](https://github.com/yashtiwari1906/Ticket_Management_System/blob/main/Images/Demo.gif)
 
 ### frontend 
     * This folder contains frontend part of the application and it was developed in React JS.
