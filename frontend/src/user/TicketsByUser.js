@@ -1,6 +1,4 @@
-import { getDefaultNormalizer } from '@testing-library/react';
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom';
 import Base from "../core/Base";
 import { Tickets } from './helper/index';
 
@@ -8,7 +6,6 @@ import { Tickets } from './helper/index';
 
 
 const TicketsByUser = () => {
-    const navigate = useNavigate();
     const [values, setValues]=  useState({
         name: "",
         email:"",
@@ -25,11 +22,11 @@ const TicketsByUser = () => {
     }
 
     const getTickets = () =>{
-        console.log("we entred value for succes is ", success, tickets)
+      
         if (success) {
             return (
             tickets.map((ticket,index)=>{
-                console.log("yep in loop")
+                
                 return (
                     <div className='col-md-12 text-center'>
                         <button className="btn btn-primary"> {ticket} </button>
@@ -41,8 +38,6 @@ const TicketsByUser = () => {
         }
         
     }
-
-    
     
     const onSubmit=(event_case)=>{
         
@@ -152,7 +147,6 @@ const TicketsByUser = () => {
     {errorMessage()}
     {signUpForm()}
     {getTickets()}
-    
     
     </Base>
   )

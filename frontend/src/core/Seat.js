@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from "react"; 
 import Base from "./Base";
 import "../style.css";
-import Card from "./Card";
 import { getSeats } from "./helper/coreapicalls";
 import SeatHelper from "./helper/SeatHelper";
 
@@ -15,9 +14,7 @@ export default function Seat() {
     const loadAllSeats = () => {
       getSeats()
         .then((data) => {
-            console.log("+++++++")
-            console.log(data)
-            console.log("+++++++")
+            
           if (data.error) {
             setError(data.error);
             console.log(error);
@@ -47,7 +44,7 @@ export default function Seat() {
 
             <div className="row">
                 {seats.map((seat,index)=>{
-                  console.log("====", getEvent(), seat.event)
+                  
                   if (getEvent() === seat.event) {
                     return (
                         <div key={index} className="col-1 mb-4">

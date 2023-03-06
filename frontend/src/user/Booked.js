@@ -1,5 +1,3 @@
-import { getDefaultNormalizer } from '@testing-library/react';
-import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom';
 import Base from "../core/Base";
 
@@ -8,7 +6,6 @@ const Booked = () =>{
     const navigate = useNavigate();
 
     const toHome = () =>{
-        console.log("button clicked")
         navigate("/");
     }
 

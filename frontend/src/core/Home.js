@@ -13,9 +13,7 @@ export default function Home() {
     const loadAllEvents = () => {
       getEvents()
         .then((data) => {
-            console.log("+++++++")
-            console.log(data)
-            console.log("+++++++")
+            
           if (data.error) {
             setError(data.error);
             console.log(error);

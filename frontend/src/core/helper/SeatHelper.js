@@ -17,7 +17,7 @@ const SeatHelper = ({ seat }) => {
     var clicked = false;
     const navigate = useNavigate();
     const addToCart = () => {
-        console.log("seat value", seat.row, seat.col)
+       
         addTicket(seat.row, seat.col)
         navigate("/book")
     }
