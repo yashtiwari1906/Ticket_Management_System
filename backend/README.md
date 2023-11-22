@@ -19,6 +19,8 @@
     
 ### Run the django app 
     ` python manage.py runserver ` 
+### Prepare configurations
+    update the credentials.json with your email and password, first follow the steps for disabling two factor authentication and generation a password https://stackoverflow.com/questions/26736062/sending-email-fails-when-two-factor-authentication-is-on-for-gmail
     
 ### URLS fr the project
     * Majorly we'll need admin url to access admin panel from web which is http://127.0.0.1:8000/admin/ and rest all urls are on postman link to workspace is given below.
@@ -28,6 +30,9 @@
     * Once the server is live login to admin by hiting the url http://127.0.0.1:8000/admin/ and add the Events of your choice say. comedy_show, movie, etc. and then you can go ahead with testing it out for those events.
     * PS. I have only considered 150 seats.
     
+### Run with celery for executing task asynchronously
+    * If you'll try to directly run this django server without celery&redis the asynchronous part will be skipped during execution
+    * type in another terminal to activate celery`python -m celery -A backend worker -l info python manage.py runserver`
 ### Future Work 
     * starting booking time is more because system is generating all the corresponding tickets, It can be improved by generating tickets at the time of event registry.
     * User login/logout functionality based on JWT can be introduced so that updation of details don't require old details.

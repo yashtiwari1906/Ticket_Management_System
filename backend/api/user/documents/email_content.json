@@ -1,0 +1,6 @@
+{
+    "signin": "You signed into TMS portal",
+    "update": "Your details has been updated on TMS portal",
+    "details":"Somebody fetched your details form TMS portal",
+    "reset": "Aalert!!! Somebody has reset database for the users"
+}

@@ -1,4 +1,5 @@
-from rest_framework import viewsets 
+from rest_framework import viewsets
+from ticketing.tasks import send_feedback_email_task 
 from .serializers import UserSerializers
 from .models import User
 from django.views.decorators.csrf import csrf_exempt
@@ -6,7 +7,7 @@ from django.http import JsonResponse
 import re
 #from django.contrib.auth.models import User as AuthUser
 from django.contrib.auth import authenticate
-
+import json 
 # Create your views here.
  
 class UserViewSet(viewsets.ModelViewSet):
@@ -17,6 +18,8 @@ class UserViewSet(viewsets.ModelViewSet):
 class UserOperations():
     def __init__(self):
         self.name = "user"
+        with open("api/user/documents/email_content.json", "r") as json_file: 
+            self.email_content_dict = json.load(json_file)
 
     @csrf_exempt
     def checkUserExists(self, request): 
@@ -54,6 +57,8 @@ class UserOperations():
         user = User(name = name, email = email, contact = contact)
         user.save() 
         usr_dict = User.objects.filter(email = email).values().first()
+        msg = self.email_content_dict["signin"]
+        send_feedback_email_task.delay(email, msg)
         return JsonResponse({'success':True,'error':False,'msg':'user saved successfully', "details": usr_dict}) 
 
     @csrf_exempt
@@ -83,12 +88,16 @@ class UserOperations():
         user.contact = updated_contact 
         user.save()
         usr_dict = User.objects.filter(id = user_id).values().first()
+        msg = self.email_content_dict["update"]
+        send_feedback_email_task.delay(email, msg)
         return JsonResponse({'success':True,'error':False,'msg':'user details updated successfully', "details": usr_dict}) 
 
     @csrf_exempt
     def details(self, id): 
         usr_dict = User.objects.filter(id = id).values().first() 
         new_usr_dict = {k:v for k, v in usr_dict.items() if k in ["name", "email", "contact"]}
+        msg = self.email_content_dict["details"]
+        send_feedback_email_task.delay(new_usr_dict["email"], msg)
         return JsonResponse({'success':True,'error':False,'msg':'user details fetched successfully', "details": new_usr_dict}) 
 
 
